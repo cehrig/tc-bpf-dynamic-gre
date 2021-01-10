@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 {
     int array_fd, ret;
     int ip_old_key = 0, ip_new_key = 1;
-    int ip_old, ip_new;
+    unsigned int ip_old, ip_new;
 
     if (argc != 3) {
         error(-1, errno, "run with [old dst IP] [new dst IP]");
@@ -30,7 +30,7 @@ int main(int argc, char **argv)
         error(-1, errno, "bpf_obj_get(%s)", PINNED_FILE);
     }
 
-    printf("old dst: %d new dst: %d\n", ip_old, ip_new);
+    printf("old dst: %u new dst: %u\n", ip_old, ip_new);
 
     ret = bpf_map_update_elem(array_fd, &ip_old_key, (void *)&ip_old, 0);
     if (ret) {

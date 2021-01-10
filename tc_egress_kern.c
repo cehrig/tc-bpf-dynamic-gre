@@ -23,7 +23,7 @@ struct bpf_elf_map SEC("maps") gre_dst = {
 };
 
 SEC("egress")
-int egress_log(struct __sk_buff *skb)
+int _egress(struct __sk_buff *skb)
 {
     void *data = (void *)(long)skb->data;
     void *data_end = (void *)(long)skb->data_end;
@@ -36,11 +36,11 @@ int egress_log(struct __sk_buff *skb)
     }
 
     // not handling ipv6 at the moment
-    if (eth_hdr->h_proto == ntohs(ETH_P_IPV6)) {
-        return TC_ACT_OK;
-    }
-
-    if (ip_hdr->daddr != _ingress_old_addr()) {
+    if (eth_hdr->h_proto == ntohs(ETH_P_IPV6)
+    // only process GRE packets
+    || ip_hdr->protocol != IPPROTO_GRE
+    // only process packets with configured destination address
+    || ip_hdr->daddr != _ingress_old_addr()) {
         return TC_ACT_OK;
     }
 
