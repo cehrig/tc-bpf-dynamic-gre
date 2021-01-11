@@ -19,16 +19,28 @@ relevant steps to install egress filter
 ```
 tc qdisc add dev enp0s31f6 clsact
 tc filter add dev enp0s31f6 egress bpf da obj tc_egress_kern.o sec egress
-tc filter del dev <egress interface> egress
-tc qdisc del dev <egress interface> clsact
 ```
 ## configure BPF map
 `./tc_egress_user 1.2.4.8 <dynamic GRE endpoint>`
+
+## cleanup
+```
+tc filter del dev <egress interface> egress
+tc qdisc del dev <egress interface> clsact
+```
 
 # Ingress (XDP)
 Ingress packets will have source IP set to the endpoint's dynamic IP. We have to map that to our dummy IP address.
 ## kernel object
 `clang -g -O2 -target bpf -o xdp_ingress_kern.o -c xdp_ingress_kern.c`
 
-## install in XDP via iproute2
-`ip link set dev <ingress iface> xdp obj ./xdp_ingress_kern.o sec xdp`
+## user-space
+`gcc -lbpf -o xdp_ingress_user xdp_ingress_user.c`
+
+## install in XDP via custom loader
+We are using a customer load here to re-use the map setup via tc
+
+`./xdp_ingress_user <ingress interface>`
+
+## cleanup
+`ip link set dev <ingress interface> xdp off`
