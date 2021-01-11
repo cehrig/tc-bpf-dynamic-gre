@@ -48,7 +48,8 @@ int _egress(struct __sk_buff *skb)
 }
 
 SEC("ingress_old_addr")
-__u32 _ingress_old_addr() {
+__u32 _ingress_old_addr()
+{
     __u32 old_dst_key = 0;
     __u32 old_dst = 0;
 
