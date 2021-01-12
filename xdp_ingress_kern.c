@@ -39,7 +39,6 @@ int xdp_prog(struct xdp_md *ctx)
     return xdp_ingress_gre_prog(ip_hdr);
 }
 
-SEC("xdp_ingress_new_addr")
 __u32 xdp_ingress_new_addr_prog()
 {
     __u32 new_src_key = 1;
@@ -53,16 +52,22 @@ __u32 xdp_ingress_new_addr_prog()
     return new_src;
 }
 
-SEC("xdp_ingress_gre")
 int xdp_ingress_gre_prog(void *data)
 {
     __u32 src_key = 0;
 
     // read dest IP from map elem #1 and change source addr
     __u32 *value = bpf_map_lookup_elem(&gre_dst, &src_key);
+    __u32 *ip_src = (__u32*)data+3;
 
     if (value && *value > 0) {
-        // Todo change saddr
+        __u8 *_ip_src = (__u8*)ip_src;
+        __u8 *_value = (__u8*)value;
+
+        _ip_src[0] = _value[0];
+        _ip_src[1] = _value[1];
+        _ip_src[2] = _value[2];
+        _ip_src[3] = _value[3];
     }
 
     return XDP_PASS;
