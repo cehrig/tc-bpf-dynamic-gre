@@ -52,6 +52,25 @@ __u32 xdp_ingress_new_addr_prog()
     return new_src;
 }
 
+__u16 checksum(__u16 *data, __u32 len) {
+    __u32 sum = 0;
+
+    while (len > 1) {
+        sum += *data;
+        data++;
+        len -= 2;
+    }
+
+    if (len == 1) {
+        sum += *(__u8 *)data;
+    }
+
+    sum = (sum & 0xffff) + (sum >> 16);
+    sum = (sum & 0xffff) + (sum >> 16);
+
+    return ~sum;
+}
+
 int xdp_ingress_gre_prog(void *data)
 {
     __u32 src_key = 0;
@@ -60,7 +79,6 @@ int xdp_ingress_gre_prog(void *data)
     __u32 *value = bpf_map_lookup_elem(&gre_dst, &src_key);
     __u32 *ip_src = (__u32*)data+3;
     __u16 *ip_csum = (__u16*)data+5;
-    __u32 csum = 0;
 
     if (value && *value > 0) {
         __u8 *_ip_src = (__u8*)ip_src;
@@ -72,9 +90,7 @@ int xdp_ingress_gre_prog(void *data)
         _ip_src[3] = _value[3];
 
         *ip_csum = 0;
-        csum = bpf_csum_diff(0, 0, data, sizeof(struct iphdr), csum);
-        csum = ~((csum & 0xffff) + (csum >> 16));
-        *ip_csum = csum;
+        *ip_csum = checksum((__u16 *)data, sizeof(struct iphdr));
     }
 
     return XDP_PASS;
