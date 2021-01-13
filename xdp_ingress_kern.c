@@ -59,6 +59,8 @@ int xdp_ingress_gre_prog(void *data)
     // read dest IP from map elem #1 and change source addr
     __u32 *value = bpf_map_lookup_elem(&gre_dst, &src_key);
     __u32 *ip_src = (__u32*)data+3;
+    __u16 *ip_csum = (__u16*)data+5;
+    __u32 csum = 0;
 
     if (value && *value > 0) {
         __u8 *_ip_src = (__u8*)ip_src;
@@ -68,6 +70,11 @@ int xdp_ingress_gre_prog(void *data)
         _ip_src[1] = _value[1];
         _ip_src[2] = _value[2];
         _ip_src[3] = _value[3];
+
+        *ip_csum = 0;
+        csum = bpf_csum_diff(0, 0, data, sizeof(struct iphdr), csum);
+        csum = ~((csum & 0xffff) + (csum >> 16));
+        *ip_csum = csum;
     }
 
     return XDP_PASS;
