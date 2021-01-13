@@ -66,7 +66,6 @@ __u16 checksum(__u16 *data, __u32 len) {
     }
 
     sum = (sum & 0xffff) + (sum >> 16);
-    sum = (sum & 0xffff) + (sum >> 16);
 
     return ~sum;
 }
