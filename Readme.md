@@ -1,4 +1,6 @@
-This is a lab setup for using a GRE endpoint with dynamically changing IP addresses. The sending side will install a BPF programm via tc that is responsible for changing daddr and checksum. destination is read from a BPF map. 
+This is a lab setup for using a GRE endpoint with dynamically changing IP addresses. The sending side will install a BPF program
+- via tc (tc_egress) for changing destination address and checksum 
+- via XDP (xdp_ingress) for changing source address and checksum
 
 # GRE setup on sender's side
 ```
@@ -44,3 +46,16 @@ We are using a customer load here to re-use the map setup via tc
 
 ## cleanup
 `ip link set dev <ingress interface> xdp off`
+
+# Test
+A ping from the remote side should show something like this
+```
+13:52:15.472965 IP (tos 0x0, ttl 58, id 49534, offset 0, flags [DF], proto GRE (47), length 108)
+    1.2.4.8 > [senders public IP]: GREv0, Flags [none], length 88
+        IP (tos 0x0, ttl 64, id 24639, offset 0, flags [DF], proto ICMP (1), length 84)
+    10.0.10.1 > 10.0.10.0: ICMP echo request, id 11247, seq 1972, length 64
+13:52:15.473058 IP (tos 0x0, ttl 64, id 46835, offset 0, flags [DF], proto GRE (47), length 108)
+    [senders public IP] > [dynamic GRE endpoint IP]: GREv0, Flags [none], length 88
+        IP (tos 0x0, ttl 64, id 60136, offset 0, flags [none], proto ICMP (1), length 84)
+    10.0.10.0 > 10.0.10.1: ICMP echo reply, id 11247, seq 1972, length 64
+```
