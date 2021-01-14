@@ -40,7 +40,7 @@ Ingress packets will have source IP set to the endpoint's dynamic IP. We have to
 `gcc -lbpf -o xdp_ingress_user xdp_ingress_user.c`
 
 ## install in XDP via custom loader
-We are using a customer load here to re-use the map setup via tc
+We are using a custom loader here to re-use the map setup via tc
 
 `./xdp_ingress_user <ingress interface>`
 
